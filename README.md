@@ -1,2 +1,3 @@
-# quadcopter
-Quadcopter for EE149 final project
+# Quadcopter
+- EE149 Final Project
+- Abhi Upadhyay, Pranav Pomalapally, Devan Shanker, Saisaran Kidambi
