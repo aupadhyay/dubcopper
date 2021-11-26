@@ -1,11 +1,11 @@
 // ---------------------------------------------------------------------------
 #include <Wire.h>
-#include <Arduino_LSM6DS3.h>
+#include <Arduino_LSM9DS1.h>
 // ------------------- Define some constants for convenience -----------------
-#define CHANNEL1 0
-#define CHANNEL2 1
-#define CHANNEL3 2
-#define CHANNEL4 3
+//#define CHANNEL1 0
+//#define CHANNEL2 1
+//#define CHANNEL3 2
+//#define CHANNEL4 3
 
 #define YAW      0
 #define PITCH    1
@@ -15,9 +15,8 @@
 #define X           0     // X axis
 #define Y           1     // Y axis
 #define Z           2     // Z axis
-#define MPU_ADDRESS 0x68  // I2C address of the MPU-6050
-#define FREQ        250   // Sampling frequency
-#define SSF_GYRO    65.5  // Sensitivity Scale Factor of the gyro from datasheet
+#define FREQ        IMU.gyroscopeSampleRate()   // Sampling frequency
+#define SSF_GYRO    70  // Sensitivity Scale Factor of the gyro from datasheet
 
 #define STOPPED  0
 #define STARTING 1
@@ -35,6 +34,7 @@ volatile unsigned long timer[4]; // Timer of each channel
 
 // Used to configure which control (yaw, pitch, roll, throttle) is on which channel
 int mode_mapping[4];
+
 // ----------------------- IMU variables -------------------------------------
 // The RAW values got from gyro (in °/sec) in that order: X, Y, Z
 int gyro_raw[3] = {0,0,0};
@@ -46,7 +46,7 @@ long gyro_offset[3] = {0, 0, 0};
 float gyro_angle[3]  = {0,0,0};
 
 // The RAW values got from accelerometer (in m/sec²) in that order: X, Y, Z
-int acc_raw[3] = {0 ,0 ,0};
+float acc_raw[3] = {0 ,0 ,0};
 
 // Calculated angles from accelerometer's values in that order: X, Y, Z
 float acc_angle[3] = {0,0,0};
@@ -66,7 +66,7 @@ float angular_motions[3] = {0, 0, 0};
 float measures[3] = {0, 0, 0};
 
 // MPU's temperature
-int temperature;
+// int temperature;
 
 // Init flag set to TRUE after first loop
 boolean initialized;
@@ -109,47 +109,24 @@ int battery_voltage;
  * Setup configuration
  */
 void setup() {
-  // Start I2C communication
-  Wire.begin();
-  TWBR = 12; // Set the I2C clock speed to 400kHz.
-
-  // Turn LED on during setup
-  pinMode(13, OUTPUT);
-  digitalWrite(13, HIGH);
-
-  // Set pins #4 #5 #6 #7 as outputs
-  DDRD |= B11110000;
-
-  setupMpu6050Registers();
-
-  calibrateMpu6050();
-
-  configureChannelMapping();
-
-  // Configure interrupts for receiver
-  PCICR  |= (1 << PCIE0);  // Set PCIE0 to enable PCMSK0 scan
-  PCMSK0 |= (1 << PCINT0); // Set PCINT0 (digital input 8) to trigger an interrupt on state change
-  PCMSK0 |= (1 << PCINT1); // Set PCINT1 (digital input 9) to trigger an interrupt on state change
-  PCMSK0 |= (1 << PCINT2); // Set PCINT2 (digital input 10)to trigger an interrupt on state change
-  PCMSK0 |= (1 << PCINT3); // Set PCINT3 (digital input 11)to trigger an interrupt on state change
-
-  period = (1000000/FREQ) ; // Sampling period in µs
+  // IMU Setup
+  // check IMU
+  if (!IMU.begin()) {
+    Serial.println("Error initializing IMU");
+  }
 
   // Initialize loop_timer
   loop_timer = micros();
-
-  // Turn LED off now setup is done
-  digitalWrite(13, LOW);
 }
 
 /**
  * Main program loop
  */
 void loop() {
-    // 1. First, read raw values from MPU-6050
+    // 1. First, read raw values from Nano IMU (done)
     readSensor();
 
-    // 2. Calculate angles from gyro & accelerometer's values
+    // 2. Calculate angles from gyro & accelerometer's values (done)
     calculateAngles();
 
     // 3. Calculate set points of PID controller
@@ -203,21 +180,14 @@ void applyMotorSpeed() {
  * Request raw values from MPU6050.
  */
 void readSensor() {
-    Wire.beginTransmission(MPU_ADDRESS); // Start communicating with the MPU-6050
-    Wire.write(0x3B);                    // Send the requested starting register
-    Wire.endTransmission();              // End the transmission
-    Wire.requestFrom(MPU_ADDRESS,14);    // Request 14 bytes from the MPU-6050
+  // wait until IMU data is available
+  while (!IMU.accelerationAvailable());
+  IMU.readAcceleration(acc_raw[X], acc_raw[Y], acc_raw[Z]);
 
-    // Wait until all the bytes are received
-    while(Wire.available() < 14);
-
-    acc_raw[X]  = Wire.read() << 8 | Wire.read(); // Add the low and high byte to the acc_raw[X] variable
-    acc_raw[Y]  = Wire.read() << 8 | Wire.read(); // Add the low and high byte to the acc_raw[Y] variable
-    acc_raw[Z]  = Wire.read() << 8 | Wire.read(); // Add the low and high byte to the acc_raw[Z] variable
-    temperature = Wire.read() << 8 | Wire.read(); // Add the low and high byte to the temperature variable
-    gyro_raw[X] = Wire.read() << 8 | Wire.read(); // Add the low and high byte to the gyro_raw[X] variable
-    gyro_raw[Y] = Wire.read() << 8 | Wire.read(); // Add the low and high byte to the gyro_raw[Y] variable
-    gyro_raw[Z] = Wire.read() << 8 | Wire.read(); // Add the low and high byte to the gyro_raw[Z] variable
+  while (!IMU.gyroscopeAvailable());
+  IMU.readGyroscope(gyro_raw[X], gyro_raw[Y], gyro_raw[Z]);
+  
+  // temperature = Wire.read() << 8 | Wire.read(); // Add the low and high byte to the temperature variable
 }
 
 /**
@@ -252,7 +222,7 @@ void calculateAngles() {
 /**
  * Calculate pitch & roll angles using only the gyro.
  */
-void calculateGyroAngles() {
+void calculateGyroAngles() {   
     // Subtract offsets
     gyro_raw[X] -= gyro_offset[X];
     gyro_raw[Y] -= gyro_offset[Y];
@@ -271,17 +241,21 @@ void calculateGyroAngles() {
  * Calculate pitch & roll angles using only the accelerometer.
  */
 void calculateAccelerometerAngles() {
-    // Calculate total 3D acceleration vector : √(X² + Y² + Z²)
-    acc_total_vector = sqrt(pow(acc_raw[X], 2) + pow(acc_raw[Y], 2) + pow(acc_raw[Z], 2));
+//  float x_deg = atanf(x_g / sqrt(pow(y_g, 2) + pow(z_g, 2))) * 180 / PI;
+//  float y_deg = atanf(y_g / sqrt(pow(x_g, 2) + pow(z_g, 2))) * 180 / PI;
+//  float z_deg = atanf(sqrt(pow(y_g, 2) + pow(x_g, 2)) / z_g ) * 180 / PI;
 
-    // To prevent asin to produce a NaN, make sure the input value is within [-1;+1]
-    if (abs(acc_raw[X]) < acc_total_vector) {
-        acc_angle[X] = asin((float)acc_raw[Y] / acc_total_vector) * (180 / PI); // asin gives angle in radian. Convert to degree multiplying by 180/pi
-    }
-
-    if (abs(acc_raw[Y]) < acc_total_vector) {
-        acc_angle[Y] = asin((float)acc_raw[X] / acc_total_vector) * (180 / PI);
-    }
+  // Calculate total 3D acceleration vector : √(X² + Y² + Z²)
+  acc_total_vector = sqrt(pow(acc_raw[X], 2) + pow(acc_raw[Y], 2) + pow(acc_raw[Z], 2));
+  
+  // To prevent asin to produce a NaN, make sure the input value is within [-1;+1]
+  if (abs(acc_raw[X]) < acc_total_vector) {
+      acc_angle[X] = asin((float)acc_raw[Y] / acc_total_vector) * (180 / PI); // asin gives angle in radian. Convert to degree multiplying by 180/pi
+  }
+  
+  if (abs(acc_raw[Y]) < acc_total_vector) {
+      acc_angle[Y] = asin((float)acc_raw[X] / acc_total_vector) * (180 / PI);
+  }
 }
 
 /**
@@ -376,72 +350,6 @@ void configureChannelMapping() {
     mode_mapping[PITCH]    = CHANNEL2;
     mode_mapping[ROLL]     = CHANNEL1;
     mode_mapping[THROTTLE] = CHANNEL3;
-}
-
-/**
- * Configure gyro and accelerometer precision as following:
- *  - accelerometer: ±8g
- *  - gyro: ±500°/s
- *
- * @see https://www.invensense.com/wp-content/uploads/2015/02/MPU-6000-Register-Map1.pdf
- */
-void setupMpu6050Registers() {
-    // Configure power management
-    Wire.beginTransmission(MPU_ADDRESS); // Start communication with MPU
-    Wire.write(0x6B);                    // Request the PWR_MGMT_1 register
-    Wire.write(0x00);                    // Apply the desired configuration to the register
-    Wire.endTransmission();              // End the transmission
-
-    // Configure the gyro's sensitivity
-    Wire.beginTransmission(MPU_ADDRESS); // Start communication with MPU
-    Wire.write(0x1B);                    // Request the GYRO_CONFIG register
-    Wire.write(0x08);                    // Apply the desired configuration to the register : ±500°/s
-    Wire.endTransmission();              // End the transmission
-
-    // Configure the acceleromter's sensitivity
-    Wire.beginTransmission(MPU_ADDRESS); // Start communication with MPU
-    Wire.write(0x1C);                    // Request the ACCEL_CONFIG register
-    Wire.write(0x10);                    // Apply the desired configuration to the register : ±8g
-    Wire.endTransmission();              // End the transmission
-
-    // Configure low pass filter
-    Wire.beginTransmission(MPU_ADDRESS); // Start communication with MPU
-    Wire.write(0x1A);                    // Request the CONFIG register
-    Wire.write(0x03);                    // Set Digital Low Pass Filter about ~43Hz
-    Wire.endTransmission();              // End the transmission
-}
-
-/**
- * Calibrate MPU6050: take 2000 samples to calculate average offsets.
- * During this step, the quadcopter needs to be static and on a horizontal surface.
- *
- * This function also sends low throttle signal to each ESC to init and prevent them beeping annoyingly.
- *
- * This function might take ~2sec for 2000 samples.
- */
-void calibrateMpu6050() {
-    int max_samples = 2000;
-
-    for (int i = 0; i < max_samples; i++) {
-        readSensor();
-
-        gyro_offset[X] += gyro_raw[X];
-        gyro_offset[Y] += gyro_raw[Y];
-        gyro_offset[Z] += gyro_raw[Z];
-
-        // Generate low throttle pulse to init ESC and prevent them beeping
-        PORTD |= B11110000;      // Set pins #4 #5 #6 #7 HIGH
-        delayMicroseconds(1000); // Wait 1000µs
-        PORTD &= B00001111;      // Then set LOW
-
-        // Just wait a bit before next loop
-        delay(3);
-    }
-
-    // Calculate average offsets
-    gyro_offset[X] /= max_samples;
-    gyro_offset[Y] /= max_samples;
-    gyro_offset[Z] /= max_samples;
 }
 
 /**
