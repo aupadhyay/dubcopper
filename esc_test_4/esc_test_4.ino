@@ -8,12 +8,12 @@ Servo esc4;
  
 //Esc pins
 int escPin1 = 6;
-int escPin2 = 9;
-int escPin3 = 10;
-int escPin4 = 11;
+int escPin2 = 7;
+int escPin3 = 8;
+int escPin4 = 9;
 
 //Min and max pulse
-int minPulseRate        = 1000;
+int minPulseRate        = 1100;
 int maxPulseRate        = 2000;
 int throttleChangeDelay = 50;
  
@@ -41,6 +41,10 @@ void loop() {
     // Change throttle to the new value
     changeThrottle(throttle);
   }
+//  int throttle = 50;
+//  changeThrottle(throttle);
+//  writeTo4Escs(throttle);
+//  delay(10);
  
 }
  
@@ -68,6 +72,12 @@ int readThrottle() {
   
   Serial.print("Current throttle is: ");
   Serial.print(throttle);
+  Serial.print(esc2.read());
+  Serial.print(" ");
+  Serial.print(esc3.read());
+  Serial.print(" ");
+  Serial.print(esc4.read());
+  Serial.print(" ");
   Serial.println();
   
   return throttle;
