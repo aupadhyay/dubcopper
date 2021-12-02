@@ -15,7 +15,7 @@
 // ---------------------------------------------------------------------------
 // Customize here pulse lengths as needed
 #define MIN_PULSE_LENGTH 1000 // Minimum pulse length in µs
-#define MAX_PULSE_LENGTH 2000 // Maximum pulse length in µs
+#define MAX_PULSE_LENGTH 1200 // Maximum pulse length in µs (2000)
 // ---------------------------------------------------------------------------
 Servo motA, motB, motC, motD;
 char data;
@@ -28,12 +28,14 @@ void setup() {
     Serial.begin(9600);
     Serial.println("Test");
     displayInstructions();
-    motA.attach(6, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
-    motB.attach(7, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
-    motC.attach(8, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
-    motD.attach(9, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
-    
-    
+    motA.attach(9, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
+    motB.attach(10, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
+//    motC.attach(11, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
+//    motD.attach(12, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH);
+    motA.write(0);
+    motB.write(0);
+//    motC.write(0);
+//    motD.write(0);
 }
 
 /**
@@ -48,16 +50,16 @@ void loop() {
             case 48 : Serial.println("Sending minimum throttle");
                       motA.writeMicroseconds(MIN_PULSE_LENGTH);
                       motB.writeMicroseconds(MIN_PULSE_LENGTH);
-                      motC.writeMicroseconds(MIN_PULSE_LENGTH);
-                      motD.writeMicroseconds(MIN_PULSE_LENGTH);
+//                      motC.writeMicroseconds(MIN_PULSE_LENGTH);
+//                      motD.writeMicroseconds(MIN_PULSE_LENGTH);
             break;
 
             // 1
             case 49 : Serial.println("Sending maximum throttle");
                       motA.writeMicroseconds(MAX_PULSE_LENGTH);
                       motB.writeMicroseconds(MAX_PULSE_LENGTH);
-                      motC.writeMicroseconds(MAX_PULSE_LENGTH);
-                      motD.writeMicroseconds(MAX_PULSE_LENGTH);
+//                      motC.writeMicroseconds(MAX_PULSE_LENGTH);
+//                      motD.writeMicroseconds(MAX_PULSE_LENGTH);
             break;
 
             // 2
@@ -77,7 +79,8 @@ void loop() {
                       delay(1000);
                       Serial.println(" 1...");
                       delay(1000);
-                      test_single(motD);
+                      test_single(motA);
+            break;
 
             case 52 : Serial.print("Running new test in 3");
                       delay(1000);
@@ -87,36 +90,11 @@ void loop() {
                       delay(1000);
                       testWrite();
             break;
-            break;
         }
     }
     
 
 }
-
-void testWrite()
-{
-    int m = 0; 
-    int mm = 150;
-    for (int i = m; i <= mm; i += 5) {
-        Serial.print("Pulse length = ");
-        Serial.println(i);
-        
-        motA.write(i);
-        motB.write(i);
-        motC.write(i);
-        motD.write(i);
-        
-        delay(200);
-    }
-
-    Serial.println("STOP");
-    motA.write(m);
-    motB.write(m);
-    motC.write(m);
-    motD.write(m);
-}
-
 
 /**
  * Test function: send min throttle to max throttle to each ESC.
@@ -129,8 +107,8 @@ void test()
         
         motA.writeMicroseconds(i);
         motB.writeMicroseconds(i);
-        motC.writeMicroseconds(i);
-        motD.writeMicroseconds(i);
+//        motD.writeMicroseconds(i);
+//        motC.writeMicroseconds(i);
         
         delay(200);
     }
@@ -138,8 +116,8 @@ void test()
     Serial.println("STOP");
     motA.writeMicroseconds(MIN_PULSE_LENGTH);
     motB.writeMicroseconds(MIN_PULSE_LENGTH);
-    motC.writeMicroseconds(MIN_PULSE_LENGTH);
-    motD.writeMicroseconds(MIN_PULSE_LENGTH);
+//    motD.writeMicroseconds(MIN_PULSE_LENGTH);
+//    motC.writeMicroseconds(MIN_PULSE_LENGTH);
 }
 
 /**
@@ -159,6 +137,29 @@ void test_single(Servo mot)
     mot.writeMicroseconds(MIN_PULSE_LENGTH);
 }
 
+void testWrite()
+{
+    int m = 0; 
+    int mm = 150;
+    for (int i = m; i <= mm; i += 5) {
+        Serial.print("Pulse length = ");
+        Serial.println(i);
+        
+        motA.write(i);
+        motB.write(i);
+//        motC.write(i);
+//        motD.write(i);
+        
+        delay(200);
+    }
+
+    Serial.println("STOP");
+    motA.write(m);
+    motB.write(m);
+//    motC.write(m);
+//    motD.write(m);
+}
+
 /**
  * Displays instructions to user
  */
@@ -169,3 +170,20 @@ void displayInstructions()
     Serial.println("\t1 : Send max throttle");
     Serial.println("\t2 : Run test function\n");
 }
+
+//void writeTo4Escs(int throttle) {
+//  esc1.write(throttle);
+//  esc2.write(throttle);
+//  esc3.write(throttle);
+//  esc4.write(throttle);
+//}
+
+//void initEscs() {
+//  esc1.attach(escPin1, minPulseRate, maxPulseRate);
+//  esc2.attach(escPin2, minPulseRate, maxPulseRate);
+//  esc3.attach(escPin3, minPulseRate, maxPulseRate);
+//  esc4.attach(escPin4, minPulseRate, maxPulseRate);
+//  
+//  //Init motors with 0 value
+//  writeTo4Escs(0);
+//}

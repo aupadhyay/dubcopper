@@ -9,7 +9,7 @@ Servo esc4;
 //Esc pins
 int escPin1 = 6;
 int escPin2 = 7;
-int escPin3 = 8;
+int escPin3 = 10;
 int escPin4 = 9;
 
 //Min and max pulse
