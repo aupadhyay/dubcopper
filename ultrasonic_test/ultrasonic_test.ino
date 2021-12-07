@@ -11,11 +11,19 @@
 
 #include <NewPing.h>
 
-#define TRIGGER_PIN 12
-#define ECHO_PIN 11
+#define TRIGGER_PIN 8
+#define ECHO_PIN 9
 #define MAX_DISTANCE 300
 
+int trigPin0 = 8;
+int echoPin0 = 9;
+
+int trigPin1 = 10;
+int echoPin1 = 11;
+
 NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+NewPing sonar0(trigPin0, echoPin0, MAX_DISTANCE);
+NewPing sonar1(trigPin1, echoPin1, MAX_DISTANCE);
 
 void setup() {
   Serial.begin(9600);
@@ -23,9 +31,9 @@ void setup() {
 
 void loop() {
   delay(150);
-  int uS = sonar.ping();
-  if (uS == 0) {
-    Serial.println(“MAX: resetting sensor”);
+  int uS0 = sonar0.ping();
+  if (uS0 == 0) {
+    Serial.println("MAX: resetting sensor0");
     pinMode(ECHO_PIN, OUTPUT);
     delay(150);
     digitalWrite(ECHO_PIN, LOW);
@@ -34,9 +42,25 @@ void loop() {
     delay(150);
   } else {
     Serial.print(" ");
-    Serial.print("Ping: ");
-    Serial.print(uS / US_ROUNDTRIP_CM);
-    Serial.println(“cm”);
+    Serial.print("Ping 0: ");
+    Serial.print(uS0 / US_ROUNDTRIP_CM);
+    Serial.println("cm");
+  }
+
+  int uS1 = sonar1.ping();
+  if (uS1 == 0) {
+    Serial.println("MAX: resetting sensor1");
+    pinMode(ECHO_PIN, OUTPUT);
+    delay(150);
+    digitalWrite(ECHO_PIN, LOW);
+    delay(150);
+    pinMode(ECHO_PIN, INPUT);
+    delay(150);
+  } else {
+    Serial.print(" ");
+    Serial.print("Ping 1: ");
+    Serial.print(uS1 / US_ROUNDTRIP_CM);
+    Serial.println("cm");
   }
 }
 

@@ -21,7 +21,7 @@ int escPin3 = 10;
 int escPin4 = 11;
 
 #define MIN_PULSE_LENGTH 1100 // Minimum pulse length in µs
-#define MAX_PULSE_LENGTH 1200 // Maximum pulse length in µs (2000)
+#define MAX_PULSE_LENGTH 2000 // Maximum pulse length in µs (2000)
 // ---------------------------------------------------------------------------
 
 void setup() {
