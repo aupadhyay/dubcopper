@@ -10,3 +10,6 @@
 - [Drive folder](https://drive.google.com/drive/u/0/folders/1z9w4FiKU779kSoAePMhZpMJqE_qxDBUN)
 - [Project proposal](https://drive.google.com/drive/u/0/folders/1z9w4FiKU779kSoAePMhZpMJqE_qxDBUN)
 - [Parts research](https://docs.google.com/spreadsheets/d/1W4SOoiZAKfaTcyHB8h7Ji4nHMvn6XT8dhc893T2B0os/edit#gid=0)
+
+# Drone Control
+- ![image](https://qph.fs.quoracdn.net/main-qimg-c6ec09cd03c939112f84d3abe76993ea-lq)
