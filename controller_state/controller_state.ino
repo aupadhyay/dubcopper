@@ -1,3 +1,5 @@
+#include <NewPing.h>
+
 // state variables
 enum state_enum {
   START,
@@ -20,6 +22,48 @@ enum motor_enum {
   DROP
 };
 motor_enum motor = OFF;
+
+// ultrasonic sensor setup
+#define TRIGGER_PIN 8
+#define ECHO_PIN 9
+#define MAX_DISTANCE 300
+
+int trigPin0 = 8;
+int echoPin0 = 9;
+
+int trigPin1 = 10;
+int echoPin1 = 11;
+
+float front_Sensor = 0;
+float left_Sensor = 0;
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+NewPing sonar0(trigPin0, echoPin0, MAX_DISTANCE);
+NewPing sonar1(trigPin1, echoPin1, MAX_DISTANCE);
+
+void measureSensor(float* var) {
+  int uS = -1;
+  if (var == &front_Sensor) {
+    uS = sonar0.ping();
+  } else if (var == &left_Sensor) {
+    uS = sonar1.ping();
+  }
+  if (uS == 0) {
+    Serial.println("MAX: resetting sensor0");
+    pinMode(ECHO_PIN, OUTPUT);
+    delay(150);
+    digitalWrite(ECHO_PIN, LOW);
+    delay(150);
+    pinMode(ECHO_PIN, INPUT);
+    delay(150);
+  } else {
+    Serial.print(" ");
+    Serial.print("Ping 0: ");
+    &var = uS / US_ROUNDTRIP_CM
+    Serial.print(&var);
+    Serial.println("cm");
+  }
+}
 
 // start
 bool armed = false;
@@ -65,8 +109,23 @@ void rotateLeft() {
   orientation = (orientation + 3) % 4;
 }
 
-bool frontBlocked() {}
-bool leftBlocked() {}
+bool frontBlocked() {
+  measureSensor(&front_Sensor);
+  if (front_Sensor < 20) {
+    return true;
+  } else {
+    return false;
+  }
+}
+  
+bool leftBlocked() {
+  measureSensor(&left_Sensor);
+  if (left_Sensor < 20) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 // rotateRight()
 // rotateLeft()
