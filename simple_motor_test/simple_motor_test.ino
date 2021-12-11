@@ -7,7 +7,8 @@
  *     6. A long beep tone emits meaning the throttle lowest point has been correctly confirmed
  *     7. Type 2 to launch test function. This will send min to max throttle to ESCs to test them
  */
- // ---------------------------------------------------------------------------
+ 
+// ---------------------------------------------------------------------------
 #include <Servo.h>
 // ---------------------------------------------------------------------------
 
@@ -21,7 +22,7 @@ int escPin3 = 10;
 int escPin4 = 11;
 
 #define MIN_PULSE_LENGTH 1100 // Minimum pulse length in µs
-#define MAX_PULSE_LENGTH 2000 // Maximum pulse length in µs (2000)
+#define MAX_PULSE_LENGTH 1300 // Maximum pulse length in µs (2000)
 // ---------------------------------------------------------------------------
 
 void setup() {
@@ -72,8 +73,10 @@ void test()
     for (int i = MIN_PULSE_LENGTH; i <= MAX_PULSE_LENGTH; i += 5) {
         Serial.print("Pulse length = ");
         Serial.println(i);
-
+        
         writeTo4Escs(i);
+
+        Serial.println(esc1.read());
         
         delay(200);
     }
@@ -84,8 +87,8 @@ void test()
 
 void writeTo4Escs(int throttle) {
   esc1.write(throttle);
-  esc2.write(throttle);
-  esc3.write(throttle);
+  esc2.write(throttle + 4);
+  esc3.write(throttle + 1);
   esc4.write(throttle);
 }
 
