@@ -62,7 +62,7 @@ void rotateRight() {
   orientation = (orientation + 1) % 4;
 }
 void rotateLeft() {
-  orientation = (orientation + 1) % 4;
+  orientation = (orientation + 3) % 4;
 }
 
 bool frontBlocked() {}
