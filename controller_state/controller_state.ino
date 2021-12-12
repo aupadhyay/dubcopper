@@ -19,8 +19,7 @@ enum state_enum {
   FINISHED,
   LOWER,
   TERMINATE
-};
-state_enum state = START;
+} state = START;
 
 enum motor_enum {
   OFF,
@@ -28,8 +27,7 @@ enum motor_enum {
   FORWARD,
   BRAKE, // not yet used
   DROP
-};
-motor_enum motor = OFF;
+} motor = OFF;
 
 // start
 bool armed = false;
@@ -151,7 +149,7 @@ void loop() {
   lblock = leftBlocked(); fblock = frontBlocked();
 
   switch (state) {
-    case START:
+    case START: {
       if (armed) { // waits for serial input to start
         state = LIFTOFF;
         motor = LIFT; motorUpdate(motor);
@@ -160,8 +158,9 @@ void loop() {
         motor = OFF; motorUpdate(motor);
       }
       break;
+    }
 
-    case LIFTOFF:
+    case LIFTOFF: {
       if (liftoff_counter >= LIFTOFF_TIME) {
         state = MOVE_FORWARD;
         motor = FORWARD; motorUpdate(motor);
@@ -172,8 +171,9 @@ void loop() {
         if (point_delay) delay(10);
       }
       break;
+    }
 
-    case MOVE_FORWARD:
+    case MOVE_FORWARD: {
       if (frontBlocked()) {
         state = WALL_LEFT; 
         rotateRight();
@@ -185,8 +185,9 @@ void loop() {
         if (point_delay) delay(10);
       }
       break;
+    }
 
-    case WALL_LEFT:
+    case WALL_LEFT: {
       bool lblock = leftBlocked();
       bool fblock = frontBlocked();
       if (num_turns == 4 && abs(curr_x) < .2 * abs(max_x-min_x) && abs(curr_y) < .2 * abs(max_y-min_y)) {
@@ -221,8 +222,9 @@ void loop() {
         pointUpdate(curr_x, curr_y);
       }
       break;
+    }
 
-    case OPEN:
+    case OPEN: {
       if (!lblock) {
         state = OPEN;
         motor = FORWARD; motorUpdate(motor);
@@ -237,15 +239,17 @@ void loop() {
         pointUpdate(curr_x, curr_y);
       }
       break;
+    }
 
-    case BLOCKED:
+    case BLOCKED: {
       // bool lblock = leftBlocked();
       // bool fblock = frontBlocked();
       state = WALL_LEFT;
       motor = FORWARD; motorUpdate(motor);
       break;
+    }
 
-    case FINISHED:
+    case FINISHED: {
       if (backward_counter >= forward_counter) {
         state = LOWER; 
         motor = DROP; motorUpdate(motor);
@@ -256,8 +260,9 @@ void loop() {
         if (point_delay) delay(10);
       }
       break;
+    }
 
-    case LOWER:
+    case LOWER: {
       if (lower_counter >= LIFTOFF_TIME * 1.25) {
         state = TERMINATE;
         motor = OFF; motorUpdate(motor);
@@ -268,11 +273,13 @@ void loop() {
         if (point_delay) delay(10);
       }
       break;
+    }
 
-    case TERMINATE:
+    case TERMINATE: {
       state = START; armed = false; // disarmed and idle in start
       motor = OFF; motorUpdate(motor);
       break;
+    }
   }
 
   delay(20);
