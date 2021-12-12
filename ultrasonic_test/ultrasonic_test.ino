@@ -15,99 +15,75 @@
 #define ECHO_PIN 9
 #define MAX_DISTANCE 300
 
-int trigPin0 = 8;
-int echoPin0 = 9;
+int trigPin0 = 0;
+int echoPin0 = 1;
 
-int trigPin1 = 10;
-int echoPin1 = 11;
+int trigPin1 = 2;
+int echoPin1 = 3;
 
-NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+int trigPin2 = 4;
+int echoPin2 = 5;
+
+int trigPin3 = 12;
+int echoPin3 = 13;
+
+float dist0 = 0, dist1 = 0, dist2 = 0, dist3 = 0;
+
 NewPing sonar0(trigPin0, echoPin0, MAX_DISTANCE);
 NewPing sonar1(trigPin1, echoPin1, MAX_DISTANCE);
+NewPing sonar2(trigPin2, echoPin2, MAX_DISTANCE);
+NewPing sonar3(trigPin3, echoPin3, MAX_DISTANCE);
 
 void setup() {
   Serial.begin(9600);
+  resetSensor(echoPin0);
+  resetSensor(echoPin1);
+  resetSensor(echoPin2);
 }
 
 void loop() {
-  delay(150);
-  int uS0 = sonar0.ping();
-  if (uS0 == 0) {
-    Serial.println("MAX: resetting sensor0");
-    pinMode(ECHO_PIN, OUTPUT);
-    delay(150);
-    digitalWrite(ECHO_PIN, LOW);
-    delay(150);
-    pinMode(ECHO_PIN, INPUT);
-    delay(150);
-  } else {
-    Serial.print(" ");
-    Serial.print("Ping 0: ");
-    Serial.print(uS0 / US_ROUNDTRIP_CM);
-    Serial.println("cm");
+  delay(1000);
+  dist0 = sonar0.ping_cm();
+  if (dist0 == 0) {
+    resetSensor(echoPin0);
+    delay(15);
+    dist0 = sonar0.ping_cm();
   }
+  Serial.print("dist0: "); Serial.println(dist0);
 
-  int uS1 = sonar1.ping();
-  if (uS1 == 0) {
-    Serial.println("MAX: resetting sensor1");
-    pinMode(ECHO_PIN, OUTPUT);
-    delay(150);
-    digitalWrite(ECHO_PIN, LOW);
-    delay(150);
-    pinMode(ECHO_PIN, INPUT);
-    delay(150);
-  } else {
-    Serial.print(" ");
-    Serial.print("Ping 1: ");
-    Serial.print(uS1 / US_ROUNDTRIP_CM);
-    Serial.println("cm");
+  dist1 = sonar1.ping_cm();
+  if (dist1 == 0) {
+    resetSensor(echoPin1);
+    delay(15);
+    dist1 = sonar1.ping_cm();
   }
+  Serial.print("dist1: "); Serial.println(dist1);
+
+  dist2 = sonar2.ping_cm();
+  if (dist2 == 0) {
+    resetSensor(echoPin2);
+    delay(15);
+    dist2 = sonar2.ping_cm();
+  }
+  Serial.print("dist2: "); Serial.println(dist2);
+
+  dist3 = sonar3.ping_cm();
+  if (dist3 == 0) {
+    resetSensor(echoPin3);
+    delay(15);
+    dist3 = sonar3.ping_cm();
+  }
+  Serial.print("dist3: "); Serial.println(dist3);
+
+  Serial.println();
 }
 
-/***
- * Old code that did not use NewPing and did not reset sensor
- */
- 
-//int trigPins[] = {12};
-//int echoPins[]= {11};
-//int len = 1;
-//
-//void setup() {
-//  Serial.begin (9600);
-//  for (int i=0; i<len; i++) {
-//    pinMode(trigPins[i], OUTPUT);
-//    pinMode(echoPins[i], INPUT);
-//  }
-////  pinMode(trigPin2, OUTPUT);
-////  pinMode(echoPin2, INPUT);
-////  pinMode(trigPin3, OUTPUT);
-////  pinMode(echoPin3, INPUT);
-//}
-//
-//void loop() {
-//  float RightSensor = distance(trigPins[0], echoPins[0]);
-//  
-////  SonarSensor(trigPin2, echoPin2);
-////  LeftSensor = distance;
-////  SonarSensor(trigPin3, echoPin3);
-////  FrontSensor = distance;
-//
-//}
-//
-//float distance(int trigPin,int echoPin) {
-//  digitalWrite(trigPin, LOW);
-//  delayMicroseconds(2);
-//  digitalWrite(trigPin, HIGH);
-//  delayMicroseconds(10);
-//  digitalWrite(trigPin, LOW);
-//  
-//  float duration = pulseIn(echoPin, HIGH);
-//  //float distance = (duration/2) / 29.1;
-//  float distance = (duration / 2) * 0.0343;
-//
-//  Serial.print("detected object ");
-//  Serial.print(distance);
-//  Serial.println(" cm away");
-//  
-//  return distance;
-//}
+void resetSensor(int echoPin) {
+  Serial.println("MAX: resetting sensor");
+  pinMode(echoPin, OUTPUT);
+  delay(15);
+  digitalWrite(echoPin, LOW);
+  delay(15);
+  pinMode(echoPin, INPUT);
+  delay(15);
+}
