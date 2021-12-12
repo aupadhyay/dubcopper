@@ -270,9 +270,8 @@ void loop() {
       break;
 
     case TERMINATE:
-      if(true) {
-        motor = OFF; motorUpdate(motor);
-      }
+      state = START; armed = false; // disarmed and idle in start
+      motor = OFF; motorUpdate(motor);
       break;
   }
 
