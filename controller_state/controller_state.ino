@@ -39,7 +39,7 @@ const int off_speed = 0;
 
 int liftoff_counter = 0;
 const int lift_speed = 90; // technically should be zero for 2D kabuku
-const int LIFTOFF_TIME = 3000; // ms
+const int LIFTOFF_TIME = 0; // 3000 ms
 
 // move_forward
 int forward_counter = 0;
@@ -147,6 +147,8 @@ void setup() {
 void loop() {
   // main
   lblock = leftBlocked(); fblock = frontBlocked();
+
+  Serial.println(state);
 
   switch (state) {
     case START: {
@@ -281,6 +283,6 @@ void loop() {
       break;
     }
   }
-
-  delay(20);
+  pointUpdate(curr_x, curr_y);
+  delay(200);
 }
