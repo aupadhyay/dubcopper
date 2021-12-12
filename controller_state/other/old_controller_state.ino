@@ -1,9 +1,5 @@
 #include <NewPing.h>
 
-#define MAX_DISTANCE 300
-
-//* change for drone
-
 // configs
 bool point_delay = false;
 
@@ -18,7 +14,7 @@ enum state_enum {
   // BLOCKED_FRONT, // LEFT not blocked, FRONT blocked
   FINISHED,
   LOWER,
-  TERMINATE,
+  TERMINATE
 };
 state_enum state = START;
 
@@ -30,6 +26,48 @@ enum motor_enum {
   DROP
 };
 motor_enum motor = OFF;
+
+// ultrasonic sensor setup
+#define TRIGGER_PIN 8
+#define ECHO_PIN 9
+#define MAX_DISTANCE 300
+
+int trigPin0 = 8;
+int echoPin0 = 9;
+
+int trigPin1 = 10;
+int echoPin1 = 11;
+
+float front_sensor_dist; //*
+float left_sensor_dist; //*
+
+NewPing sonar(TRIGGER_PIN, ECHO_PIN, MAX_DISTANCE);
+NewPing sonar0(trigPin0, echoPin0, MAX_DISTANCE);
+NewPing sonar1(trigPin1, echoPin1, MAX_DISTANCE);
+
+void measureSensor(float* var) {
+  int uS = -1;
+  if (var == &front_sensor_dist) {
+    uS = sonar0.ping();
+  } else if (var == &left_sensor_dist) {
+    uS = sonar1.ping();
+  }
+  if (uS == 0) {
+    Serial.println("MAX: resetting sensor0");
+    pinMode(ECHO_PIN, OUTPUT);
+    delay(150);
+    digitalWrite(ECHO_PIN, LOW);
+    delay(150);
+    pinMode(ECHO_PIN, INPUT);
+    delay(150);
+  } else {
+    Serial.print(" ");
+    Serial.print("Ping 0: ");
+    &var = uS / US_ROUNDTRIP_CM;
+    Serial.print(&var);
+    Serial.println("cm");
+  }
+}
 
 // start
 bool armed = false;
@@ -61,47 +99,8 @@ int backward_counter = 0;
 const int lower_speed = 50;
 int lower_counter = 0;
 
-// ultrasonic sensor setup
-int numSensors = 4;
-const float blockThreshold = 50;
-
-int trigPins[] = {12, 0, 2, 4}; //*
-int echoPins[] = {13, 1, 3, 5}; //*
-
-float sensorDists[] = {0.0, 0.0, 0.0, 0.0};
-
-NewPing sonar0(trigPins[0], echoPins[0], MAX_DISTANCE);
-NewPing sonar1(trigPins[1], echoPins[1], MAX_DISTANCE);
-NewPing sonar2(trigPins[2], echoPins[2], MAX_DISTANCE);
-NewPing sonar3(trigPins[3], echoPins[3], MAX_DISTANCE);
-
-NewPing sonars[] = {sonar0, sonar1, sonar2, sonar3};
-
-int front() { return orientation % 4; }
-int right() { return (orientation + 1) % 4; }
-int back()  { return (orientation + 3) % 4; }
-int left()  { return (orientation + 2) % 4; }
-
-void resetSensor(int index) {
-  Serial.print("MAX: resetting sensor - echo: ");
-  int echoPin = echoPins[index];
-  Serial.println(echoPin);
-  pinMode(echoPin, OUTPUT);   delay(15);
-  digitalWrite(echoPin, LOW); delay(15);
-  pinMode(echoPin, INPUT);    delay(15);
-}
-void measureSensor(int index) {
-  float dist = sonars[index].ping_cm();
-  if (dist == 0) {
-    resetSensor(echoPins[index]); delay(15);
-    dist = sonars[index].ping_cm();
-  }
-  sensorDists[index] = dist;
-  Serial.print("DIST: "); Serial.println(dist);
-}
-
 // methods
-void motorUpdate(motor_enum m) {} //*
+void motorUpdate(motor_enum m) {}
 void pointUpdate(int x_val, int y_val) {
   Serial.print(state); Serial.print(": ");
   Serial.print(x_val); Serial.print(", ");
@@ -115,17 +114,21 @@ void rotateLeft() {
 }
 
 bool frontBlocked() {
-  int index = front();
-  measureSensor(index);
-  float dist = sensorDists[index];
-  return dist < blockThreshold;
+  measureSensor(&front_sensor_dist);
+  if (front_sensor_dist < 20) {
+    return true;
+  } else {
+    return false;
+  }
 }
-
+  
 bool leftBlocked() {
-  int index = left();
-  measureSensor(index);
-  float dist = sensorDists[index];
-  return dist < blockThreshold;
+  measureSensor(&left_sensor_dist);
+  if (left_sensor_dist < 20) {
+    return true;
+  } else {
+    return false;
+  }
 }
 
 // rotateRight()
@@ -141,9 +144,6 @@ void setup() {
   while(!Serial);
   armed = true;
 
-  for (int i = 0; i < numSensors; i++) {
-    resetSensor(echoPins[i]);
-  }
 }
 
 void loop() {
