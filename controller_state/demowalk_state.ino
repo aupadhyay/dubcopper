@@ -1,8 +1,5 @@
 #include <NewPing.h>
 
-// configs
-bool point_delay = false;
-
 // state variables
 enum state_enum {
   START,
@@ -26,6 +23,10 @@ enum motor_enum {
   DROP
 };
 motor_enum motor = OFF;
+
+// CONFIGS
+bool point_delay = false;
+state_enum prev = start;
 
 // ultrasonic sensor setup
 #define TRIGGER_PIN 8
@@ -108,9 +109,11 @@ void pointUpdate(int x_val, int y_val) {
 }
 void rotateRight() {
   orientation = (orientation + 1) % 4;
+  Serial.println("ROTATED RIGHT");
 }
 void rotateLeft() {
   orientation = (orientation + 3) % 4;
+  Serial.println("ROTATED LEFT");
 }
 
 bool frontBlocked() {
@@ -272,6 +275,10 @@ void loop() {
     case TERMINATE:
       motor = OFF; motorUpdate(motor);
       break;
+  }
+  if (prev != start) {
+    Serial.print("NEW STATE: ");
+    Serial.println(prev);
   }
 
   delay(20);
