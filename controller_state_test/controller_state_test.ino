@@ -190,17 +190,26 @@ void loop() {
       if (lblock && fblock) {
         state = BLOCKED;
         motor = FORWARD; motorUpdate(motor);
+        pointUpdate(curr_x, curr_y);
+      } else if (lblock) {
+        state = WALL_LEFT; // case: entering wall_left off left turn
+        motor = FORWARD; motorUpdate(motor);
+        pointUpdate(curr_x, curr_y);
+      } else if (fblock) {
+        state = WALL_LEFT; // case: readjustment from wall_left to wall_left
+        rotateRight(); num_turns += 1;
+        motor = FORWARD; motorUpdate(motor);
+        pointUpdate(curr_x, curr_y);
+      } else {
+        state = WALL_LEFT;
+        motor = FORWARD; motorUpdate(motor);
         curr_x = curr_x + (orientation % 2) * (2 - orientation);
         curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
         max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
         max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
         pointUpdate(curr_x, curr_y);
-      } else if (lblock) {
-        state = WALL_LEFT;
-        motor = FORWARD; motorUpdate(motor);
-        pointUpdate(curr_x, curr_y);
       }
-
+      break;
 
       
       if (!lblock) {
