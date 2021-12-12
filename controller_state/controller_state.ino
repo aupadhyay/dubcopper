@@ -18,7 +18,7 @@ enum state_enum {
   // BLOCKED_FRONT, // LEFT not blocked, FRONT blocked
   FINISHED,
   LOWER,
-  TERMINATE,
+  TERMINATE
 };
 state_enum state = START;
 
@@ -270,7 +270,9 @@ void loop() {
       break;
 
     case TERMINATE:
-      motor = OFF; motorUpdate(motor);
+      if(true) {
+        motor = OFF; motorUpdate(motor);
+      }
       break;
   }
 
