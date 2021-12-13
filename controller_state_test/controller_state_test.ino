@@ -199,7 +199,7 @@ void loop() {
         motor = FORWARD; motorUpdate(motor);
         // pointUpdate(curr_x, curr_y);
       } else {
-        state = WALL_LEFT;
+        state = OPEN;
         motor = FORWARD; motorUpdate(motor);
         curr_x = curr_x + (orientation % 2) * (2 - orientation);
         curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
