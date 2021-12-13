@@ -11,14 +11,12 @@
 
 #include <NewPing.h>
 
-#define TRIGGER_PIN 8
-#define ECHO_PIN 9
 #define MAX_DISTANCE 300
 
-int trigPin0 = 6;  int echoPin0 = 7; // front
-int trigPin1 = 2;  int echoPin1 = 3; // right
-int trigPin2 = 4;  int echoPin2 = 5;  // back
-int trigPin3 = 12; int echoPin3 = 13; // left
+int trigPin0 = 0;  int echoPin0 = 1; // back
+int trigPin1 = 2;  int echoPin1 = 3; // front
+int trigPin2 = 4;  int echoPin2 = 5;  // right
+int trigPin3 = 6; int echoPin3 = 7; // left
 
 
 float dist0 = 0, dist1 = 0, dist2 = 0, dist3 = 0;

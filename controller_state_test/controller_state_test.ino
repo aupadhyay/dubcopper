@@ -4,6 +4,13 @@
 
 //* change for drone
 
+/*
+ * ULTRASONIC SENSORS (Trig, Echo Pin)
+ * BACK - (0, 1)
+ * FRONT - (2, 3)
+ * 
+ */
+
 // configs
 bool point_delay = false;
 
@@ -40,8 +47,8 @@ int lower_counter = 0;
 const int numSensors = 4;
 const float blockThreshold = 50;
 
-int trigPins[] = {12, 0, 2, 4}; //*
-int echoPins[] = {13, 1, 3, 5}; //*
+int trigPins[] = {2, 4, 0, 6}; //*
+int echoPins[] = {3, 5, 1, 7}; //*
 
 float sensorDists[] = {0.0, 0.0, 0.0, 0.0};
 
@@ -94,15 +101,15 @@ void loop() {
   Serial.println("testing");
 
   switch (state) {
-    case START: Serial.println("START"); break;
-    case LIFTOFF: Serial.println("LIFTOFF"); break;
-    case MOVE_FORWARD: Serial.println("MOVE_FORWARD"); break;
-    case WALL_LEFT: Serial.println("WALL_LEFT"); break;
-    case OPEN: Serial.println("OPEN"); break;
-    case BLOCKED: Serial.println("BLOCKED"); break;
-    case FINISHED: Serial.println("FINISHED"); break;
-    case LOWER: Serial.println("LOWER"); break;
-    case TERMINATE: Serial.println("TERMINATE"); break; 
+    case START: Serial.println("*START"); break;
+    case LIFTOFF: Serial.println("*LIFTOFF"); break;
+    case MOVE_FORWARD: Serial.println("*MOVE_FORWARD"); break;
+    case WALL_LEFT: Serial.println("*WALL_LEFT"); break;
+    case OPEN: Serial.println("*OPEN"); break;
+    case BLOCKED: Serial.println("*BLOCKED"); break;
+    case FINISHED: Serial.println("*FINISHED"); break;
+    case LOWER: Serial.println("*LOWER"); break;
+    case TERMINATE: Serial.println("*TERMINATE"); break; 
   }
   
 
@@ -199,7 +206,7 @@ void loop() {
         motor = FORWARD; motorUpdate(motor);
         // pointUpdate(curr_x, curr_y);
       } else {
-        state = OPEN;
+        state = WALL_LEFT;
         motor = FORWARD; motorUpdate(motor);
         curr_x = curr_x + (orientation % 2) * (2 - orientation);
         curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);

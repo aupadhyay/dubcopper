@@ -7,11 +7,11 @@
 // ---------------------------------------------------------------------------
 
 #define MIN_PULSE_LENGTH 1100 // Minimum pulse length in µs
-#define MAX_PULSE_LENGTH 1600 // Maximum pulse length in µs (2000)
+#define MAX_PULSE_LENGTH 1300 // Maximum pulse length in µs (2000)
 
 Servo esc1, esc2, esc3, esc4;
 
-int esc_pin1 = 6;
+int esc_pin1 = 8;
 int esc_pin2 = 9;
 int esc_pin3 = 10;
 int esc_pin4 = 11;
@@ -20,7 +20,7 @@ double pitch = 0, roll = 0, yaw = 0;
 double pitch_out, roll_out, yaw_out;
 double pitch_sp = 0, roll_sp = 0, yaw_sp = 0;
 
-double kp = 0.1, ki = 0.5, kd = 0.3;
+double kp = 0.1, ki = 0.3, kd = 0.1;
 PID pitchPID(&pitch, &pitch_out, &pitch_sp, kp, ki, kd, DIRECT);
 PID rollPID(&roll, &roll_out, &roll_sp, kp, ki, kd, DIRECT);
 PID yawPID(&yaw, &yaw_out, &yaw_sp, kp, ki, kd, DIRECT);
@@ -48,25 +48,25 @@ void setup() {
 
   //Set PID Modes
   pitchPID.SetMode(AUTOMATIC);
-  pitchPID.SetOutputLimits(-100, 100);
+  pitchPID.SetOutputLimits(-50, 50);
   
   rollPID.SetMode(AUTOMATIC);
-  rollPID.SetOutputLimits(-100, 100);
+  rollPID.SetOutputLimits(-50, 50);
   
   //yawPID.SetMode(AUTOMATIC);
   //yawPID.SetOutputLimits(-100, 100);
   while(Serial.available() == 0);
 
-  for (int i = 1100; i <= 1300; i += 5) {
+  for (int i = 1100; i <= 1165; i += 5) {
     Serial.print("Pulse length = ");
     Serial.println(i);    
     writeTo4Escs(i);
     delay(200);
   }
-  writeTo4Escs(1300, 1304, 1301, 1300);
-  delay(200);
-  writeTo4Escs(1300, 1304, 1301, 1300);
-  delay(200);
+//  writeTo4Escs(1300, 1304, 1301, 1300);
+//  delay(200);
+//  writeTo4Escs(1300, 1304, 1301, 1300);
+//  delay(200);
 }
 
 void loop() {

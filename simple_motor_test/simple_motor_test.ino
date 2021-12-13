@@ -16,13 +16,13 @@
 Servo esc1, esc2, esc3, esc4;
 char data;
 
-int escPin1 = 6;
+int escPin1 = 8;
 int escPin2 = 9;
 int escPin3 = 10;
 int escPin4 = 11;
 
 #define MIN_PULSE_LENGTH 1100 // Minimum pulse length in µs
-#define MAX_PULSE_LENGTH 1300 // Maximum pulse length in µs (2000)
+#define MAX_PULSE_LENGTH 1400 // Maximum pulse length in µs (2000)
 // ---------------------------------------------------------------------------
 
 void setup() {
