@@ -101,9 +101,14 @@ void measureSensor(int index) {
 // methods
 void motorUpdate(motor_enum m) {} //*
 void pointUpdate(int x_val, int y_val) {
-  Serial.print(state); Serial.print(": ");
-  Serial.print(x_val); Serial.print(", ");
-  Serial.println(y_val);
+  Serial.print("(");
+  Serial.print(x_val);
+  Serial.print(", ");
+  Serial.print(y_val);
+  Serial.println(")");
+  // Serial.print(state); Serial.print(": ");
+  // Serial.print(x_val); Serial.print(", ");
+  // Serial.println(y_val);
 }
 void rotateRight() {
   orientation = (orientation + 1) % 4;
@@ -197,7 +202,7 @@ void loop() {
         state = FINISHED;
         rotateRight();
         motor = FORWARD; motorUpdate(motor);
-
+        pointUpdate(curr_x, curr_y);
       } else if (lblock && fblock) {
         // rotateRight() and transition to BLOCKED
         state = BLOCKED;
@@ -238,7 +243,7 @@ void loop() {
       } else {
         state = WALL_LEFT;
         motor = FORWARD; motorUpdate(motor);
-        pointUpdate(curr_x, curr_y);
+        // pointUpdate(curr_x, curr_y);
       }
       break;
     }
@@ -283,6 +288,6 @@ void loop() {
       break;
     }
   }
-  pointUpdate(curr_x, curr_y);
+  // pointUpdate(curr_x, curr_y);
   delay(200);
 }
