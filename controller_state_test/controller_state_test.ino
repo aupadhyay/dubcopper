@@ -129,8 +129,7 @@ void loop() {
         motor = FORWARD; motorUpdate(motor);
       } else {
         state = LIFTOFF;
-        motor = LIFT; 
-        motorUpdate(motor);
+        motor = LIFT; motorUpdate(motor);
         liftoff_counter += 10;
         if (point_delay) delay(10);
       }
@@ -157,19 +156,18 @@ void loop() {
         state = FINISHED;
         rotateRight();
         motor = FORWARD; motorUpdate(motor);
-
       } else if (lblock && fblock) {
         // rotateRight() and transition to BLOCKED
         state = BLOCKED;
         rotateRight(); num_turns += 1;
         motor = FORWARD; motorUpdate(motor);
-        pointUpdate(curr_x, curr_y);
+        // pointUpdate(curr_x, curr_y);
       } else if ((!lblock) && (!fblock)) {
         // rotateLeft() and transition to OPEN
         state = OPEN;
         rotateLeft(); num_turns -= 1;
         motor = FORWARD; motorUpdate(motor);
-        pointUpdate(curr_x, curr_y);
+        // pointUpdate(curr_x, curr_y);
       } else {
         // maintain distance and stay in WALL_LEFT
         state = WALL_LEFT; // lblock && (!fblock)
@@ -190,16 +188,16 @@ void loop() {
       if (lblock && fblock) {
         state = BLOCKED;
         motor = FORWARD; motorUpdate(motor);
-        pointUpdate(curr_x, curr_y);
+        // pointUpdate(curr_x, curr_y);
       } else if (lblock) {
         state = WALL_LEFT; // case: entering wall_left off left turn
         motor = FORWARD; motorUpdate(motor);
-        pointUpdate(curr_x, curr_y);
+        // pointUpdate(curr_x, curr_y);
       } else if (fblock) {
         state = WALL_LEFT; // case: readjustment from wall_left to wall_left
         rotateRight(); num_turns += 1;
         motor = FORWARD; motorUpdate(motor);
-        pointUpdate(curr_x, curr_y);
+        // pointUpdate(curr_x, curr_y);
       } else {
         state = WALL_LEFT;
         motor = FORWARD; motorUpdate(motor);
@@ -210,25 +208,23 @@ void loop() {
         pointUpdate(curr_x, curr_y);
       }
       break;
-
-      
-      if (!lblock) {
-        state = OPEN;
-        motor = FORWARD; motorUpdate(motor);
-        curr_x = curr_x + (orientation % 2) * (2 - orientation);
-        curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
-        max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
-        max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
-        pointUpdate(curr_x, curr_y);
-      } else if (!fblock) {
+      // if (!lblock) {
+      //   state = OPEN;
+      //   motor = FORWARD; motorUpdate(motor);
+      //   curr_x = curr_x + (orientation % 2) * (2 - orientation);
+      //   curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
+      //   max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
+      //   max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
+      //   pointUpdate(curr_x, curr_y);
+      // } else if (!fblock) {
         
       
-      } else {
-        state = WALL_LEFT;
-        motor = FORWARD; motorUpdate(motor);
-        pointUpdate(curr_x, curr_y);
-      }
-      break;
+      // } else {
+      //   state = WALL_LEFT;
+      //   motor = FORWARD; motorUpdate(motor);
+      //   // pointUpdate(curr_x, curr_y);
+      // }
+      // break;
     }
 
     case BLOCKED: {
@@ -272,7 +268,7 @@ void loop() {
     }
   }
 
-  pointUpdate(curr_x, curr_y);
+  // pointUpdate(curr_x, curr_y);
   delay(200);
 }
 
@@ -297,6 +293,11 @@ void measureSensor(int index) {
 void motorUpdate(motor_enum m) {} //*
 
 void pointUpdate(int x_val, int y_val) {
+  Serial.print("(");
+  Serial.print(x_val);
+  Serial.print(", ");
+  Serial.print(y_val);
+  Serial.println(")");
 //  Serial.print(state); Serial.print(": ");
 //  Serial.print(x_val); Serial.print(", ");
 //  Serial.println(y_val);
