@@ -60,9 +60,37 @@ void loop() {
             break;
 
             // 3
-            case 51: Serial.print("EXITING");
+            case 51: Serial.println("EXITING");
                      writeTo4Escs(0);
             break;
+
+            case 52:  {
+              Serial.print("Trying motor ");
+
+              while(1) {
+                writeToEsc(esc3, MIN_PULSE_LENGTH);
+                delay(200);
+              }
+              break;
+            }
+
+            //5
+            case 53:  {
+              Serial.print("loop ");
+
+              while(1) {
+                writeTo4Escs(1200);
+                delay(200);
+
+                int esc1Read = esc1.readMicroseconds(), esc2Read = esc2.readMicroseconds(), esc3Read = esc3.readMicroseconds(), esc4Read = esc4.readMicroseconds();
+
+                Serial.print("esc1 read: "); Serial.println(esc1Read);
+                Serial.print("esc2 read: "); Serial.println(esc2Read);
+                Serial.print("esc3 read: "); Serial.println(esc3Read);
+                Serial.print("esc4 read: "); Serial.println(esc4Read);
+              }
+              break;
+            }
         }
   }
 
@@ -86,10 +114,15 @@ void test()
 }
 
 void writeTo4Escs(int throttle) {
-  esc1.write(throttle);
-  esc2.write(throttle + 4);
-  esc3.write(throttle + 1);
-  esc4.write(throttle);
+  esc1.writeMicroseconds(throttle);
+  esc2.writeMicroseconds(throttle);
+  esc3.writeMicroseconds(throttle);
+  esc4.writeMicroseconds(throttle);
+
+}
+
+void writeToEsc(Servo i, int throttle) {
+  i.write(throttle);
 }
 
 //Init escs
