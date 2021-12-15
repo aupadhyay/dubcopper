@@ -10,7 +10,6 @@
 
 #define PITCH_BIAS 2.05
 #define ROLL_BIAS 1.45
-
 Servo esc1, esc2, esc3, esc4;
 
 int esc_pin1 = 8;
@@ -25,7 +24,6 @@ double pitch_sp = 0, roll_sp = 0, yaw_sp = 0;
 double kp = 0.002, ki = 0, kd = 0;
 PID pitchPID(&pitch, &pitch_out, &pitch_sp, kp, ki, kd, DIRECT);
 PID rollPID(&roll, &roll_out, &roll_sp, kp, ki, kd, DIRECT);
-PID yawPID(&yaw, &yaw_out, &yaw_sp, kp, ki, kd, DIRECT);
 // ---------------------------------------------------------------------------
 
 bool motors = true;
@@ -56,9 +54,6 @@ void setup() {
   rollPID.SetMode(AUTOMATIC);
   rollPID.SetOutputLimits(-100, 100);
   
-  //yawPID.SetMode(AUTOMATIC);
-  //yawPID.SetOutputLimits(-100, 100);
-  
   while(Serial.available() == 0);
 
   if (motors) {
@@ -84,30 +79,16 @@ void loop() {
   //Compute PID values
   pitchPID.Compute();
   rollPID.Compute();
-  //yawPID.Compute();
  
   Serial.print("pitch_out: "); Serial.println(pitch_out);
   Serial.print("roll_out: "); Serial.println(roll_out);
 
   
   if (motors) {
-    int esc1Read = esc1.readMicroseconds(), esc2Read = esc2.readMicroseconds(), esc3Read = esc3.readMicroseconds(), esc4Read = esc4.readMicroseconds();
-    
-    Serial.print("esc1 ang: "); Serial.println(esc1Read);
-    Serial.print("esc2 ang: "); Serial.println(esc2Read);
-    Serial.print("esc3 ang: "); Serial.println(esc3Read);
-    Serial.print("esc4 ang: "); Serial.println(esc4Read);
-  
-    //Read current esc values
-//    int esc1_val = int(map(esc1Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
-//    int esc2_val = int(map(esc2Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
-//    int esc3_val = int(map(esc3Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
-//    int esc4_val = int(map(esc4Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
-
-    esc1_val = esc1Read;
-    esc2_val = esc2Read;
-    esc3_val = esc3Read;
-    esc4_val = esc4Read;
+    esc1_val = esc1.readMicroseconds();
+    esc2_val = esc2.readMicroseconds();
+    esc3_val = esc3.readMicroseconds();
+    esc4_val = esc4.readMicroseconds();
   }
 
   //Superimpose pitch, roll, yaw pid values
@@ -128,12 +109,6 @@ void loop() {
   esc2_val -= roll_out;
   esc3_val -= roll_out;
   esc4_val += roll_out;
-
-//  //yaw (-1 +2 -3 +4)
-//  esc1_val -= yaw_out; 
-//  esc2_val += yaw_out;
-//  esc3_val -= yaw_out;
-//  esc4_val += yaw_out;
 
   if (motors) {
     writeTo4Escs(esc1_val, esc2_val, esc3_val, esc4_val);
