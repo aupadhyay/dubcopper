@@ -91,7 +91,7 @@ void loop() {
 
   
   if (motors) {
-    int esc1Read = esc1.read(), esc2Read = esc2.read(), esc3Read = esc3.read(), esc4Read = esc4.read();
+    int esc1Read = esc1.readMicroseconds(), esc2Read = esc2.readMicroseconds(), esc3Read = esc3.readMicroseconds(), esc4Read = esc4.readMicroseconds();
     
     Serial.print("esc1 ang: "); Serial.println(esc1Read);
     Serial.print("esc2 ang: "); Serial.println(esc2Read);
@@ -99,10 +99,15 @@ void loop() {
     Serial.print("esc4 ang: "); Serial.println(esc4Read);
   
     //Read current esc values
-    int esc1_val = int(map(esc1Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
-    int esc2_val = int(map(esc2Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
-    int esc3_val = int(map(esc3Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
-    int esc4_val = int(map(esc4Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
+//    int esc1_val = int(map(esc1Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
+//    int esc2_val = int(map(esc2Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
+//    int esc3_val = int(map(esc3Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
+//    int esc4_val = int(map(esc4Read, 0, 180, MIN_PULSE_LENGTH, MAX_PULSE_LENGTH));
+
+    esc1_val = esc1Read;
+    esc2_val = esc2Read;
+    esc3_val = esc3Read;
+    esc4_val = esc4Read;
   }
 
   //Superimpose pitch, roll, yaw pid values
