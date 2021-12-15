@@ -383,12 +383,20 @@ bool endCondition() {
 }
 
 void closeGraph() {
-  int dir = curr_y / abs(curr_y); // sign function
-  for (int yt = curr_y; abs(curr_y) > 0; yt += dir) {
+  //int dir = - curr_y / abs(curr_y); // sign function
+  int dir = curr_y > 0;
+  for (int yt = curr_y; abs(yt) > 0; yt += 1 - 2 * dir) {
     Serial.print("(");
     Serial.print(curr_x);
     Serial.print(", ");
     Serial.print(yt);
     Serial.println(")");
-  }
+  } // vertical close
+  for (int xt = curr_x; xt <= 0; xt++) {
+    Serial.print("(");
+    Serial.print(xt);
+    Serial.print(", ");
+    Serial.print(0);
+    Serial.println(")");
+  } // horizontal close if curr_x < 0
 }
