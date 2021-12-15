@@ -15,3 +15,17 @@ Test values:
 - best so far:
 - 10ms delays = 100Hz
 - P = 0.1P
+
+- contender:
+- 10ms delays = 100Hz
+- P = 0.08
+
+- final:
+- 10 ms delays = 100Hz
+- P = 0.09
+
+---
+- P = 0.09
+- I = 0.05 -> too strong
+- I = 0.04 -> bit much
+- 
