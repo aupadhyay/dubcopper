@@ -16,7 +16,7 @@
 #define NUM_SENSORS 4
 #define NUM_READS 3
 #define BLOCK_THRESHOLD 50
-#define OPEN_THRESHOLD 100
+#define OPEN_THRESHOLD 60
 #define OFF_SPEED 0         // START
 #define LIFTOFF_TIME 0      // LIFTOFF 3000
 #define FORWARD_SPEED 75    // MOVE_FORWARD
@@ -354,14 +354,16 @@ void rotateLeft() {
 }
 
 bool frontBlocked() {
-  return blocked(front());
+  float median = blocked(front());
+  return median < BLOCK_THRESHOLD && median > 0;
 }
 
 bool leftBlocked() {
-  return blocked(left());
+  float median = blocked(left());
+  return median < BLOCK_THRESHOLD && median > 0;
 }
 
-bool blocked(int index) {
+float blocked(int index) {
   RunningMedian medianFilter = RunningMedian(NUM_READS);
   measureSensor(index);
   float dist = sensorDists[index];
@@ -374,7 +376,7 @@ bool blocked(int index) {
   }
   float median = medianFilter.getMedian();
   Serial.print("Median: "); Serial.println(median);
-  return median < BLOCK_THRESHOLD && median > 0;
+  return median;
 }
 
 bool endCondition() {
