@@ -1,4 +1,9 @@
 #include <Arduino_LSM9DS1.h>
+
+
+#define PITCH_BIAS 2.4
+#define ROLL_BIAS 1.23
+
 float roll, pitch, yaw;
 float roll_off = 0.0, pitch_off = 0.0, yaw_off = 0.0;
 
@@ -12,8 +17,8 @@ void readSensors() {
   IMU.readAcceleration(x, y, z);
   IMU.readMagneticField(mag_readX, mag_readY, mag_readZ);
 
-  pitch = 180 * atan(x/sqrt(y*y + z*z))/M_PI;
-  roll = 180 * atan(y/sqrt(x*x + z*z))/M_PI;
+  pitch = PITCH_BIAS + 180 * atan(x/sqrt(y*y + z*z))/M_PI;
+  roll = ROLL_BIAS + 180 * atan(y/sqrt(x*x + z*z))/M_PI;
 
   // float Yh = (mag_readY * cos(roll)) - (mag_readZ * sin(roll));
   // float Xh = (mag_readX * cos(pitch))+(mag_readY * sin(roll)*sin(pitch)) + (mag_readZ * cos(roll) * sin(pitch));
@@ -35,12 +40,12 @@ void setup() {
 
 void loop() {
   readSensors();
-  Serial.print("Roll: ");
-  Serial.println(roll);
-  Serial.print("Pitch: ");
-  Serial.println(pitch);
-  Serial.print("Yaw: ");
-  Serial.println(yaw);
+  Serial.print("Pitch: "); Serial.println(pitch);
+  
+  Serial.print("Roll: "); Serial.println(roll);
+  
+  Serial.print("Yaw: "); Serial.println(yaw);
+  
   Serial.println();
   delay(100);
 }

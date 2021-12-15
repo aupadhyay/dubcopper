@@ -60,9 +60,19 @@ void loop() {
             break;
 
             // 3
-            case 51: Serial.print("EXITING");
+            case 51: Serial.println("EXITING");
                      writeTo4Escs(0);
             break;
+
+            case 52:  {
+              Serial.print("Trying motor ");
+
+              while(1) {
+                writeToEsc(esc3, MIN_PULSE_LENGTH);
+                delay(200);
+              }
+              break;
+            }
         }
   }
 
@@ -90,6 +100,10 @@ void writeTo4Escs(int throttle) {
   esc2.write(throttle + 4);
   esc3.write(throttle + 1);
   esc4.write(throttle);
+}
+
+void writeToEsc(Servo i, int throttle) {
+  i.write(throttle);
 }
 
 //Init escs

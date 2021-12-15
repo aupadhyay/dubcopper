@@ -364,17 +364,3 @@ bool blocked(int index) {
   Serial.print("Median: "); Serial.println(median);
   return median < BLOCK_THRESHOLD && median > 0;
 }
-
-//bool frontBlocked() {
-//  int index = front();
-//  measureSensor(index);
-//  float dist = sensorDists[index];
-//  return dist < BLOCK_THRESHOLD && dist > 0;
-//}
-//
-//bool leftBlocked() {
-//  int index = left();
-//  measureSensor(index);
-//  float dist = sensorDists[index];
-//  return dist < BLOCK_THRESHOLD;
-//}
