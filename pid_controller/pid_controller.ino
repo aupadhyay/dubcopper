@@ -3,10 +3,12 @@
 #include <PID_v1.h>
 #include "FastPID.h"
 #include <Arduino_LSM9DS1.h>
+#include <ArduinoBLE.h>
 // ---------------------------------------------------------------------------
 
 #define MIN_PULSE_LENGTH 1100 // Minimum pulse length in µs
 #define MAX_PULSE_LENGTH 1300 // Maximum pulse length in µs (2000)
+#define SHUTDOWN_THRESHOLD 10000 // 10 seconds running at 10Hz
 
 #define PITCH_BIAS 2.05
 #define ROLL_BIAS 1.45
@@ -29,6 +31,7 @@ float kp_r = 0.04, ki_r = 0;
 float kd = 0.1, hz = 10;
 int pitch_out, roll_out;
 
+int shutdownTimer = 0;
 int esc1_val = 1200;
 int esc2_val = 1200;
 int esc3_val = 1200;
@@ -37,6 +40,9 @@ int esc4_val = 1200;
 FastPID pitchPID(kp_p, ki_p, kd, hz, OUTPUT_BITS, OUTPUT_SIGNED);
 FastPID rollPID(kp_r, ki_r, kd, hz, OUTPUT_BITS, OUTPUT_SIGNED);
 Servo esc1, esc2, esc3, esc4;
+
+BLEService controlService("180F");
+BLEByteCharacteristic controlChar("368096a9-fcdb-412d-be59-0e5e5f8fc3e8", BLERead | BLEWrite);
 
 void setup() {
   // Set up serial monitor
@@ -49,6 +55,12 @@ void setup() {
     Serial.println("Failed to initialize IMU");
     exit(0);
   }
+  if (!BLE.begin()) {
+    Serial.println("starting BLE failed!");
+    exit(0);
+  }
+  
+  initBLE();
 
   // Init escs
   initEscs();
@@ -61,7 +73,10 @@ void setup() {
   pitchPID.setOutputRange(-100, 100);
   rollPID.setOutputRange(-100, 100);
 
-  while (Serial.available() == 0);
+  BLEDevice central = BLE.central();
+  while(!central) {
+    central = BLE.central();
+  }
 
   if (MOTORS) {
     for (int i = 1150; i <= 1200; i += 5) {
@@ -74,7 +89,13 @@ void setup() {
 }
 
 void loop() {
-  // Read Sensors values and update input values for PID
+  if(shutdownTimer > SHUTDOWN_THRESHOLD) {
+    writeTo4Escs(0);
+    exit(0); 
+  }
+  shutdownTimer = shutdownTimer + 1;
+
+  //Read Sensors values and update input values for PID
   readSensors();
   Serial.print("pitch angle: "); Serial.println(pitch);
   Serial.print("roll angle: "); Serial.println(roll);
@@ -190,3 +211,25 @@ void initEscs() {
   // Init motors with 0 value
   writeTo4Escs(0);
 }
+
+void bleHandler(BLEDevice central, BLECharacteristic d) {
+  Serial.print("Characteristic event, written: ");
+  Serial.println((char*) d.value());
+  // take in control and apply it
+}
+
+//Init BLE service
+void initBLE() {
+  BLE.setLocalName("Dubcopper_Control");
+  BLE.setAdvertisedService(controlService);
+  controlService.addCharacteristic(controlChar);
+  BLE.addService(controlService);
+  controlChar.setEventHandler(BLEWritten, bleHandler);
+  controlChar.writeValue(0);
+
+  BLE.advertise();
+
+  Serial.println("Bluetooth device active, waiting for connections...");
+}
+
+
