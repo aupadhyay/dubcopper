@@ -2,20 +2,21 @@
 #include <RunningMedian.h>
 
 /*
- * CONTROLLER_STATE
- * 
- * ULTRASONIC SENSORS (Index, Trig, Echo Pin)
- * FRONT - (0, 2, 3)
- * RIGHT - (1, 4, 5)
- * BACK -  (2, 0, 1)
- * LEFT -  (3, 6, 7)
- * 
- */
+   CONTROLLER_STATE
+
+   ULTRASONIC SENSORS (Index, Trig, Echo Pin)
+   FRONT - (0, 2, 3)
+   RIGHT - (1, 4, 5)
+   BACK -  (2, 0, 1)
+   LEFT -  (3, 6, 7)
+
+*/
 
 #define MAX_DISTANCE 300
 #define NUM_SENSORS 4
 #define NUM_READS 3
 #define BLOCK_THRESHOLD 50
+#define OPEN_THRESHOLD 100
 #define OFF_SPEED 0         // START
 #define LIFTOFF_TIME 0      // LIFTOFF 3000
 #define FORWARD_SPEED 75    // MOVE_FORWARD
@@ -97,7 +98,7 @@ int lower_counter = 0;
 
 void setup() {
   Serial.begin(9600);
-  while(!Serial);
+  while (!Serial);
   armed = true;
 
   for (int i = 0; i < NUM_SENSORS; i++) {
@@ -107,182 +108,185 @@ void setup() {
 
 void loop() {
   Serial.print("orientation: "); Serial.println(orientation);
-  
+
   fblock = frontBlocked();
   Serial.print("front blocked: "); Serial.println(fblock);
 
-  lblock = leftBlocked(); 
+  lblock = leftBlocked();
   Serial.print("left blocked: "); Serial.println(lblock);
 
 
 
   switch (state) {
-    
+
     case START: {
-      if (armed) { // waits for serial input to start
-        state = LIFTOFF;
-        motor = LIFT; motorUpdate(motor);
-      } else {
-        state = START;
-        motor = OFF; motorUpdate(motor);
+        if (armed) { // waits for serial input to start
+          state = LIFTOFF;
+          motor = LIFT; motorUpdate(motor);
+        } else {
+          state = START;
+          motor = OFF; motorUpdate(motor);
+        }
+        break;
       }
-      break;
-    }
 
     case LIFTOFF: {
-      if (liftoff_counter >= LIFTOFF_TIME) {
-        state = MOVE_FORWARD;
-        motor = FORWARD; motorUpdate(motor);
-      } else {
-        state = LIFTOFF;
-        motor = LIFT; motorUpdate(motor);
-        liftoff_counter += 10;
-        if (point_delay) delay(10);
+        if (liftoff_counter >= LIFTOFF_TIME) {
+          state = MOVE_FORWARD;
+          motor = FORWARD; motorUpdate(motor);
+        } else {
+          state = LIFTOFF;
+          motor = LIFT; motorUpdate(motor);
+          liftoff_counter += 10;
+          if (point_delay) delay(10);
+        }
+        break;
       }
-      break;
-    }
 
     case MOVE_FORWARD: {
-      if (fblock) {
-        state = WALL_LEFT; 
-        rotateRight();
-        motor = FORWARD; motorUpdate(motor);
-      } else {
-        state = MOVE_FORWARD;
-        motor = FORWARD; motorUpdate(motor);
-        forward_counter += 10;
-        if (point_delay) delay(10);
+        if (fblock) {
+          state = WALL_LEFT;
+          rotateRight();
+          motor = FORWARD; motorUpdate(motor);
+        } else {
+          state = MOVE_FORWARD;
+          motor = FORWARD; motorUpdate(motor);
+          forward_counter += 10;
+          if (point_delay) delay(10);
+        }
+        break;
       }
-      break;
-    }
 
     case WALL_LEFT: {
-      if (num_turns == 4 && abs(curr_x) < .2 * abs(max_x-min_x) && abs(curr_y) < .2 * abs(max_y-min_y)) {
-        // move forward some amount and go to return/move_backward state
-        state = FINISHED;
-        rotateRight();
-        motor = FORWARD; motorUpdate(motor);
+        if (endCondition()) {
+        // if (num_turns == 4 && abs(curr_x) < .2 * abs(max_x - min_x) && abs(curr_y) < .2 * abs(max_y - min_y)) {
+          // move forward some amount and go to return/move_backward state
+          closeGraph();
+          
+          state = FINISHED;
+          rotateRight();
+          motor = FORWARD; motorUpdate(motor);
 
-        // rotateRight() and transition to BLOCKED
-      } else if (lblock && fblock && wall_left_iter >= WALL_LEFT_THRESH) {
-        state = BLOCKED;
-        rotateRight(); num_turns += 1;
-        motor = FORWARD; motorUpdate(motor);
-        wall_left_iter = 0;
+          // rotateRight() and transition to BLOCKED
+        } else if (lblock && fblock && wall_left_iter >= WALL_LEFT_THRESH) {
+          state = BLOCKED;
+          rotateRight(); num_turns += 1;
+          motor = FORWARD; motorUpdate(motor);
+          wall_left_iter = 0;
 
-        // rotateLeft() and transition to OPEN
-      } else if ((!lblock) && (!fblock) && wall_left_iter >= WALL_LEFT_THRESH) { 
-        state = OPEN;
-        rotateLeft(); num_turns -= 1;
-        motor = FORWARD; motorUpdate(motor);
-        wall_left_iter = 0;
+          // rotateLeft() and transition to OPEN
+        } else if ((!lblock) && (!fblock) && wall_left_iter >= WALL_LEFT_THRESH && blocked(left()) > OPEN_THRESHOLD) {
+          state = OPEN;
+          rotateLeft(); num_turns -= 1;
+          motor = FORWARD; motorUpdate(motor);
+          wall_left_iter = 0;
 
-        // maintain distance and stay in WALL_LEFT
-      } else { 
-        wall_left_iter += 1;
-        state = WALL_LEFT; // lblock && (!fblock)
-        if ((!lblock) && fblock) { // BLOCKED_FRONT case
-          rotateRight(); num_turns += 1; 
+          // maintain distance and stay in WALL_LEFT
+        } else {
+          wall_left_iter += 1;
+          state = WALL_LEFT; // lblock && (!fblock)
+          if ((!lblock) && fblock) { // BLOCKED_FRONT case
+            rotateRight(); num_turns += 1;
+          }
+          motor = FORWARD; motorUpdate(motor);
+          curr_x = curr_x + (orientation % 2) * (2 - orientation);
+          curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
+          max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
+          max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
+          pointUpdate(curr_x, curr_y);
         }
-        motor = FORWARD; motorUpdate(motor);
-        curr_x = curr_x + (orientation % 2) * (2 - orientation);
-        curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
-        max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
-        max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
-        pointUpdate(curr_x, curr_y);
+        break;
       }
-      break;
-    }
 
     case OPEN: {
-      if (lblock && fblock && open_iter >= OPEN_THRESH) {
-        state = BLOCKED;
-        motor = FORWARD; motorUpdate(motor);
-        open_iter = 0;
-        
-        // pointUpdate(curr_x, curr_y);
-      } else if (lblock && open_iter >= OPEN_THRESH) {
-        state = WALL_LEFT; // case: entering wall_left off left turn
-        motor = FORWARD; motorUpdate(motor);
-        open_iter = 0;
-        
-        // pointUpdate(curr_x, curr_y);
-      } else if (fblock && open_iter >= OPEN_THRESH) {
-        state = WALL_LEFT; // case: readjustment from wall_left to wall_left
-        rotateRight(); num_turns += 1;
-        motor = FORWARD; motorUpdate(motor);
-        open_iter = 0;
-        
-        // pointUpdate(curr_x, curr_y);
-      } else {
-        open_iter += 1;
-        state = WALL_LEFT;
-        motor = FORWARD; motorUpdate(motor);
-        curr_x = curr_x + (orientation % 2) * (2 - orientation);
-        curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
-        max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
-        max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
-        pointUpdate(curr_x, curr_y);
+        if (lblock && fblock && open_iter >= OPEN_THRESH) {
+          state = BLOCKED;
+          motor = FORWARD; motorUpdate(motor);
+          open_iter = 0;
+
+          // pointUpdate(curr_x, curr_y);
+        } else if (lblock && open_iter >= OPEN_THRESH) {
+          state = WALL_LEFT; // case: entering wall_left off left turn
+          motor = FORWARD; motorUpdate(motor);
+          open_iter = 0;
+
+          // pointUpdate(curr_x, curr_y);
+        } else if (fblock && open_iter >= OPEN_THRESH) {
+          state = WALL_LEFT; // case: readjustment from wall_left to wall_left
+          rotateRight(); num_turns += 1;
+          motor = FORWARD; motorUpdate(motor);
+          open_iter = 0;
+
+          // pointUpdate(curr_x, curr_y);
+        } else {
+          open_iter += 1;
+          state = WALL_LEFT;
+          motor = FORWARD; motorUpdate(motor);
+          curr_x = curr_x + (orientation % 2) * (2 - orientation);
+          curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
+          max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
+          max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
+          pointUpdate(curr_x, curr_y);
+        }
+        break;
+        // if (!lblock) {
+        //   state = OPEN;
+        //   motor = FORWARD; motorUpdate(motor);
+        //   curr_x = curr_x + (orientation % 2) * (2 - orientation);
+        //   curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
+        //   max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
+        //   max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
+        //   pointUpdate(curr_x, curr_y);
+        // } else if (!fblock) {
+
+
+        // } else {
+        //   state = WALL_LEFT;
+        //   motor = FORWARD; motorUpdate(motor);
+        //   // pointUpdate(curr_x, curr_y);
+        // }
+        // break;
       }
-      break;
-      // if (!lblock) {
-      //   state = OPEN;
-      //   motor = FORWARD; motorUpdate(motor);
-      //   curr_x = curr_x + (orientation % 2) * (2 - orientation);
-      //   curr_y = curr_y + ((orientation + 1) % 2) * (1 - orientation);
-      //   max_x = max(curr_x, max_x); min_x = min(curr_x, min_x);
-      //   max_y = max(curr_y, max_y); min_y = min(curr_y, min_y);
-      //   pointUpdate(curr_x, curr_y);
-      // } else if (!fblock) {
-        
-      
-      // } else {
-      //   state = WALL_LEFT;
-      //   motor = FORWARD; motorUpdate(motor);
-      //   // pointUpdate(curr_x, curr_y);
-      // }
-      // break;
-    }
 
     case BLOCKED: {
-      // bool lblock = leftBlocked();
-      // bool fblock = frontBlocked();
-      motor = FORWARD; motorUpdate(motor);
-      state = WALL_LEFT;
-      break;
-    }
+        // bool lblock = leftBlocked();
+        // bool fblock = frontBlocked();
+        motor = FORWARD; motorUpdate(motor);
+        state = WALL_LEFT;
+        break;
+      }
 
     case FINISHED: {
-      if (backward_counter >= forward_counter) {
-        state = LOWER; 
-        motor = DROP; motorUpdate(motor);
-      } else {
-        state = FINISHED;
-        motor = FORWARD; motorUpdate(motor);
-        backward_counter += 10;
-        if (point_delay) delay(10);
+        if (backward_counter >= forward_counter) {
+          state = LOWER;
+          motor = DROP; motorUpdate(motor);
+        } else {
+          state = FINISHED;
+          motor = FORWARD; motorUpdate(motor);
+          backward_counter += 10;
+          if (point_delay) delay(10);
+        }
+        break;
       }
-      break;
-    }
 
     case LOWER: {
-      if (lower_counter >= LIFTOFF_TIME * 1.25) {
-        state = TERMINATE;
-        motor = OFF; motorUpdate(motor);
-      } else {
-        state = LOWER;
-        motor = DROP; motorUpdate(motor);
-        lower_counter += 10;
-        if (point_delay) delay(10);
+        if (lower_counter >= LIFTOFF_TIME * 1.25) {
+          state = TERMINATE;
+          motor = OFF; motorUpdate(motor);
+        } else {
+          state = LOWER;
+          motor = DROP; motorUpdate(motor);
+          lower_counter += 10;
+          if (point_delay) delay(10);
+        }
+        break;
       }
-      break;
-    }
 
     case TERMINATE: {
-      state = START; armed = false; // disarmed and idle in start
-      motor = OFF; motorUpdate(motor);
-      break;
-    }
+        state = START; armed = false; // disarmed and idle in start
+        motor = OFF; motorUpdate(motor);
+        break;
+      }
   }
 
   //debug check state after measuremnt taken
@@ -295,17 +299,25 @@ void loop() {
     case BLOCKED: Serial.println("*BLOCKED"); break;
     case FINISHED: Serial.println("*FINISHED"); break;
     case LOWER: Serial.println("*LOWER"); break;
-    case TERMINATE: Serial.println("*TERMINATE"); break; 
+    case TERMINATE: Serial.println("*TERMINATE"); break;
   }
   // pointUpdate(curr_x, curr_y);
   Serial.println("\n");
   delay(200);
 }
 
-int front() { return orientation % 4; }
-int right() { return (orientation + 1) % 4; }
-int back()  { return (orientation + 2) % 4; }
-int left()  { return (orientation + 3) % 4; }
+int front() {
+  return orientation % 4;
+}
+int right() {
+  return (orientation + 1) % 4;
+}
+int back()  {
+  return (orientation + 2) % 4;
+}
+int left()  {
+  return (orientation + 3) % 4;
+}
 
 void resetSensor(int index) {
   Serial.print("MAX: resetting sensor - echo: ");
@@ -328,9 +340,9 @@ void pointUpdate(int x_val, int y_val) {
   Serial.print(", ");
   Serial.print(y_val);
   Serial.println(")");
-//  Serial.print(state); Serial.print(": ");
-//  Serial.print(x_val); Serial.print(", ");
-//  Serial.println(y_val);
+  //  Serial.print(state); Serial.print(": ");
+  //  Serial.print(x_val); Serial.print(", ");
+  //  Serial.println(y_val);
 }
 
 void rotateRight() {
@@ -342,11 +354,11 @@ void rotateLeft() {
 }
 
 bool frontBlocked() {
-  blocked(front());
+  return blocked(front());
 }
 
 bool leftBlocked() {
-  blocked(left());
+  return blocked(left());
 }
 
 bool blocked(int index) {
@@ -363,4 +375,20 @@ bool blocked(int index) {
   float median = medianFilter.getMedian();
   Serial.print("Median: "); Serial.println(median);
   return median < BLOCK_THRESHOLD && median > 0;
+}
+
+bool endCondition() {
+  // num_turns == 4 && abs(curr_x) < .2 * abs(max_x - min_x) && abs(curr_y) < .2 * abs(max_y - min_y)
+  return num_turns == 4 && abs(curr_x) < .2 * abs(max_x - min_x);
+}
+
+void closeGraph() {
+  int dir = curr_y / abs(curr_y); // sign function
+  for (int yt = curr_y; abs(curr_y) > 0; yt += dir) {
+    Serial.print("(");
+    Serial.print(curr_x);
+    Serial.print(", ");
+    Serial.print(yt);
+    Serial.println(")");
+  }
 }
